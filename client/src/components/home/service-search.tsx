@@ -29,7 +29,7 @@ export default function ServiceSearch() {
   const form = useForm<SearchFormValues>({
     resolver: zodResolver(searchSchema),
     defaultValues: {
-      serviceType: "",
+      serviceType: "all-services",
       location: "",
       date: ""
     },
@@ -38,7 +38,7 @@ export default function ServiceSearch() {
   const onSubmit = (data: SearchFormValues) => {
     const params = new URLSearchParams();
     
-    if (data.serviceType) {
+    if (data.serviceType && data.serviceType !== "all-services") {
       params.append("category", data.serviceType);
     }
     
@@ -77,7 +77,7 @@ export default function ServiceSearch() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="">All Services</SelectItem>
+                        <SelectItem value="all-services">All Services</SelectItem>
                         <SelectItem value="plumbing">Plumbing</SelectItem>
                         <SelectItem value="electrical">Electrical</SelectItem>
                         <SelectItem value="landscaping">Landscaping</SelectItem>
