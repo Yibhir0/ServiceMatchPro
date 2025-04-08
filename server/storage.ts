@@ -7,6 +7,7 @@ import {
 import session from "express-session";
 import createMemoryStore from "memorystore";
 
+type SessionStore = ReturnType<typeof createMemoryStore>;
 const MemoryStore = createMemoryStore(session);
 
 export interface IStorage {
@@ -58,7 +59,7 @@ export interface IStorage {
   createReview(review: InsertReview): Promise<Review>;
   
   // Session store
-  sessionStore: session.SessionStore;
+  sessionStore: SessionStore;
 }
 
 export class MemStorage implements IStorage {
@@ -70,7 +71,7 @@ export class MemStorage implements IStorage {
   private payments: Map<number, Payment>;
   private reviews: Map<number, Review>;
   
-  sessionStore: session.SessionStore;
+  sessionStore: SessionStore;
   
   private userId: number = 1;
   private serviceId: number = 1;
@@ -93,8 +94,25 @@ export class MemStorage implements IStorage {
       checkPeriod: 86400000 // 24 hours
     });
     
-    // Initialize with default services
+    // Initialize sample data
+    this.initializeData();
+  }
+  
+  private async initializeData() {
+    // Initialize services
     this.initializeServices();
+    
+    // Initialize users
+    await this.initializeUsers();
+    
+    // Initialize provider profiles
+    await this.initializeProviderProfiles();
+    
+    // Initialize credentials
+    await this.initializeCredentials();
+    
+    // Initialize bookings
+    await this.initializeBookings();
   }
   
   private initializeServices() {
@@ -115,6 +133,246 @@ export class MemStorage implements IStorage {
     });
   }
   
+  private async initializeUsers() {
+    // Create admin user
+    await this.createUser({
+      username: "admin",
+      password: "admin123", // This would be hashed in a real scenario
+      email: "admin@homeservices.com",
+      firstName: "Admin",
+      lastName: "User",
+      phone: "555-0000",
+      role: "admin" as const,
+      city: null,
+      bio: null,
+      profileImage: null
+    });
+    
+    // Create provider users
+    const providers = [
+      {
+        username: "johnplumber",
+        password: "pass123",
+        email: "john@plumbingpros.com",
+        firstName: "John",
+        lastName: "Wilson",
+        phone: "555-1234",
+        role: "provider" as const,
+        city: "New York",
+        bio: "Professional plumber with over 15 years of experience",
+        profileImage: null
+      },
+      {
+        username: "sarahelectric",
+        password: "pass123",
+        email: "sarah@electricalexperts.com",
+        firstName: "Sarah",
+        lastName: "Johnson",
+        phone: "555-2345",
+        role: "provider" as const,
+        city: "Chicago",
+        bio: "Certified electrician offering reliable and safe electrical services",
+        profileImage: null
+      },
+      {
+        username: "mikegreen",
+        password: "pass123",
+        email: "mike@greenthumb.com",
+        firstName: "Mike",
+        lastName: "Green",
+        phone: "555-3456",
+        role: "provider" as const,
+        city: "Los Angeles",
+        bio: "Dedicated landscaper with a passion for creating beautiful outdoor spaces",
+        profileImage: null
+      }
+    ];
+    
+    for (const provider of providers) {
+      await this.createUser(provider);
+    }
+    
+    // Create customer users
+    const customers = [
+      {
+        username: "customer1",
+        password: "pass123",
+        email: "customer1@example.com",
+        firstName: "Alex",
+        lastName: "Smith",
+        phone: "555-4567",
+        role: "customer" as const,
+        city: "New York",
+        bio: null,
+        profileImage: null
+      },
+      {
+        username: "customer2",
+        password: "pass123",
+        email: "customer2@example.com",
+        firstName: "Jamie",
+        lastName: "Taylor",
+        phone: "555-5678",
+        role: "customer" as const,
+        city: "Chicago",
+        bio: null,
+        profileImage: null
+      },
+      {
+        username: "customer3",
+        password: "pass123",
+        email: "customer3@example.com",
+        firstName: "Jordan",
+        lastName: "Brown",
+        phone: "555-6789",
+        role: "customer" as const,
+        city: "Los Angeles",
+        bio: null,
+        profileImage: null
+      }
+    ];
+    
+    for (const customer of customers) {
+      await this.createUser(customer);
+    }
+  }
+  
+  private async initializeProviderProfiles() {
+    // Find provider users
+    const allUsers = Array.from(this.users.values());
+    const providerUsers = allUsers.filter(user => user.role === "provider");
+    
+    // Create provider profiles
+    const profiles = [
+      {
+        userId: providerUsers[0].id,
+        bio: "Professional plumber with over 15 years of experience. Specializing in residential plumbing repairs and installations.",
+        category: "plumbing" as const,
+        hourlyRate: 75,
+        city: "New York",
+        isVerified: true,
+        rating: 4.8,
+        workImages: null,
+        yearsOfExperience: 15
+      },
+      {
+        userId: providerUsers[1].id,
+        bio: "Certified electrician offering reliable and safe electrical services. Available for both emergency repairs and planned projects.",
+        category: "electrical" as const,
+        hourlyRate: 85,
+        city: "Chicago",
+        isVerified: true,
+        rating: 4.7,
+        workImages: null,
+        yearsOfExperience: 10
+      },
+      {
+        userId: providerUsers[2].id,
+        bio: "Dedicated landscaper with a passion for creating beautiful outdoor spaces. Providing lawn care, garden design, and more.",
+        category: "landscaping" as const,
+        hourlyRate: 65,
+        city: "Los Angeles",
+        isVerified: true,
+        rating: 4.9,
+        workImages: null,
+        yearsOfExperience: 8
+      }
+    ];
+    
+    for (const profile of profiles) {
+      await this.createProviderProfile(profile);
+    }
+  }
+  
+  private async initializeCredentials() {
+    // Find provider profiles
+    const profiles = Array.from(this.providerProfiles.values());
+    
+    // Create credentials for each provider
+    for (const profile of profiles) {
+      await this.createCredential({
+        providerId: profile.id,
+        type: "license" as const,
+        number: `LIC-${Math.floor(1000 + Math.random() * 9000)}`,
+        description: "Professional license",
+        issuedBy: "State Board",
+        expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000) // 1 year from now
+      });
+      
+      await this.createCredential({
+        providerId: profile.id,
+        type: "insurance" as const,
+        number: `INS-${Math.floor(1000 + Math.random() * 9000)}`,
+        description: "Liability insurance",
+        issuedBy: "Insurance Co.",
+        expiresAt: new Date(Date.now() + 180 * 24 * 60 * 60 * 1000) // 6 months from now
+      });
+    }
+  }
+  
+  private async initializeBookings() {
+    // Get users, providers, and services
+    const customers = Array.from(this.users.values()).filter(user => user.role === "customer");
+    const providerProfiles = Array.from(this.providerProfiles.values());
+    const services = Array.from(this.services.values());
+    
+    // Create sample bookings
+    const bookings = [
+      {
+        customerId: customers[0].id,
+        providerId: providerProfiles[0].userId,
+        serviceId: services.find(s => s.category === "plumbing")?.id || 1,
+        scheduledDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000), // 2 days from now
+        address: "123 Main St",
+        city: "New York",
+        status: "requested" as const,
+        description: "Need to fix a leaky faucet in the kitchen."
+      },
+      {
+        customerId: customers[1].id,
+        providerId: providerProfiles[1].userId,
+        serviceId: services.find(s => s.category === "electrical")?.id || 4,
+        scheduledDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), // 3 days from now
+        address: "456 Oak Ave",
+        city: "Chicago",
+        status: "accepted" as const,
+        description: "Need to install new lighting fixtures in the living room."
+      },
+      {
+        customerId: customers[2].id,
+        providerId: providerProfiles[2].userId,
+        serviceId: services.find(s => s.category === "landscaping")?.id || 7,
+        scheduledDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), // 5 days ago
+        address: "789 Pine Blvd",
+        city: "Los Angeles",
+        status: "completed" as const,
+        description: "Need lawn maintenance and garden cleanup."
+      }
+    ];
+    
+    for (const booking of bookings) {
+      const createdBooking = await this.createBooking(booking as InsertBooking);
+      
+      // For completed booking, create payment and review
+      if (booking.status === "completed") {
+        const payment = await this.createPayment({
+          bookingId: createdBooking.id,
+          amount: (providerProfiles.find(p => p.id === booking.providerId)?.hourlyRate || 75) * 2, // 2 hours of work
+          paymentMethod: "credit_card" as const,
+          transactionId: `TR-${Math.floor(1000 + Math.random() * 9000)}`
+        });
+        
+        await this.createReview({
+          bookingId: createdBooking.id,
+          providerId: booking.providerId,
+          customerId: booking.customerId,
+          rating: 5,
+          comment: "Excellent service! Very professional and thorough."
+        } as InsertReview);
+      }
+    }
+  }
+  
   // User operations
   async getUser(id: number): Promise<User | undefined> {
     return this.users.get(id);
@@ -130,7 +388,15 @@ export class MemStorage implements IStorage {
   
   async createUser(user: InsertUser): Promise<User> {
     const id = this.userId++;
-    const newUser = { ...user, id };
+    const newUser: User = { 
+      ...user, 
+      id,
+      role: user.role || "customer",
+      city: user.city || null,
+      phone: user.phone || null,
+      bio: user.bio || null,
+      profileImage: user.profileImage || null
+    };
     this.users.set(id, newUser);
     return newUser;
   }
@@ -228,7 +494,14 @@ export class MemStorage implements IStorage {
   
   async createProviderProfile(profile: InsertProviderProfile): Promise<ProviderProfile> {
     const id = this.providerProfileId++;
-    const newProfile = { ...profile, id };
+    const newProfile: ProviderProfile = { 
+      ...profile, 
+      id,
+      isVerified: profile.isVerified || false,
+      rating: profile.rating || null,
+      workImages: Array.isArray(profile.workImages) ? profile.workImages : null,
+      yearsOfExperience: profile.yearsOfExperience || null
+    };
     this.providerProfiles.set(id, newProfile);
     
     // Update user role to provider
@@ -253,12 +526,13 @@ export class MemStorage implements IStorage {
   
   async createCredential(credential: InsertCredential): Promise<Credential> {
     const id = this.credentialId++;
-    const newCredential = { 
+    const newCredential: Credential = { 
       ...credential, 
       id, 
       submittedAt: new Date(),
       isVerified: false,
-      verifiedAt: null
+      verifiedAt: null,
+      expiresAt: credential.expiresAt || null
     };
     this.credentials.set(id, newCredential);
     return newCredential;
@@ -345,11 +619,13 @@ export class MemStorage implements IStorage {
   
   async createPayment(payment: InsertPayment): Promise<Payment> {
     const id = this.paymentId++;
-    const newPayment = { 
+    const newPayment: Payment = { 
       ...payment, 
       id, 
       status: "pending" as const, 
-      createdAt: new Date() 
+      createdAt: new Date(),
+      paymentMethod: payment.paymentMethod || null,
+      transactionId: payment.transactionId || null
     };
     this.payments.set(id, newPayment);
     return newPayment;
@@ -384,7 +660,12 @@ export class MemStorage implements IStorage {
   
   async createReview(review: InsertReview): Promise<Review> {
     const id = this.reviewId++;
-    const newReview = { ...review, id, createdAt: new Date() };
+    const newReview: Review = { 
+      ...review, 
+      id, 
+      createdAt: new Date(),
+      comment: review.comment || null
+    };
     this.reviews.set(id, newReview);
     return newReview;
   }
