@@ -11,6 +11,8 @@ import {
   insertReviewSchema
 } from "@shared/schema";
 
+// No need for actual Stripe integration - mock payment is used instead
+
 // Helper middleware to check authentication
 const isAuthenticated = (req: Request, res: Response, next: Function) => {
   if (req.isAuthenticated()) {
@@ -224,7 +226,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         bookings = await storage.getBookingsByProviderId(user.id);
       } else if (user.role === "admin") {
         // Admin can see all bookings (this would need pagination in a real app)
-        bookings = [...storage.getBookingsByCustomerId(0)]; // placeholder for getting all bookings
+        // Get bookings with IDs 1-100 (for demo purposes)
+        const bookingPromises = Array.from({ length: 100 }, (_, i) => storage.getBooking(i + 1));
+        bookings = (await Promise.all(bookingPromises)).filter(Boolean);
       } else {
         return res.status(403).json({ message: "Forbidden" });
       }
@@ -421,17 +425,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+
+  
   // Admin routes
   app.get("/api/admin/users", isAuthenticated, hasRole(["admin"]), async (req, res) => {
     try {
       // In a real app, this would have pagination
-      const users = Array.from(storage.getUser(0) || []); // placeholder for getting all users
+      // Get all users with IDs 1-100 (for demo purposes)
+      const userPromises = Array.from({ length: 100 }, (_, i) => storage.getUser(i + 1));
+      const users = (await Promise.all(userPromises)).filter(Boolean);
       
       // Remove passwords
       const safeUsers = users.map(user => {
+        if (!user) return null;
         const { password, ...userWithoutPassword } = user;
         return userWithoutPassword;
-      });
+      }).filter(Boolean);
       
       res.json(safeUsers);
     } catch (error) {
