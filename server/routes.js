@@ -10,7 +10,7 @@ import {
   insertReviewSchema
 } from "../shared/schema.js";
 
-// No need for actual Stripe integration - mock payment is used instead
+// Using mock payment instead of Stripe integration
 
 // Helper middleware to check authentication
 const isAuthenticated = (req, res, next) => {
@@ -426,6 +426,134 @@ export async function registerRoutes(app) {
   
 
   
+  // Get specific user's bookings (customer or provider)
+  app.get("/api/bookings/customer/:id", isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const user = req.user;
+      
+      // Only allow viewing your own bookings or if admin
+      if (user.role !== "admin" && user.id !== id) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+      
+      const bookings = await storage.getBookingsByCustomerId(id);
+      
+      res.json(bookings);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch bookings" });
+    }
+  });
+  
+  app.get("/api/bookings/provider/:id", isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const user = req.user;
+      
+      // Only allow viewing your own bookings or if admin
+      if (user.role !== "admin" && user.id !== id) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+      
+      const bookings = await storage.getBookingsByProviderId(id);
+      
+      res.json(bookings);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch bookings" });
+    }
+  });
+  
+  // Get user's provider profile
+  app.get("/api/providers/user/:id", isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const user = req.user;
+      
+      // Only allow viewing your own profile or if admin
+      if (user.role !== "admin" && user.id !== id) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+      
+      const profile = await storage.getProviderProfileByUserId(id);
+      
+      if (!profile) {
+        return res.status(404).json({ message: "Provider profile not found" });
+      }
+      
+      res.json(profile);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch provider profile" });
+    }
+  });
+
+  // Update provider profile
+  app.patch("/api/providers/:id", isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const user = req.user;
+      
+      const profile = await storage.getProviderProfile(id);
+      
+      if (!profile) {
+        return res.status(404).json({ message: "Provider profile not found" });
+      }
+      
+      // Only allow updating your own profile or if admin
+      if (user.role !== "admin" && profile.userId !== user.id) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+      
+      const updatedProfile = await storage.updateProviderProfile(id, req.body);
+      
+      res.json(updatedProfile);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update provider profile" });
+    }
+  });
+  
+  // Update user profile
+  app.patch("/api/users/:id", isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const user = req.user;
+      
+      // Only allow updating your own profile or if admin
+      if (user.role !== "admin" && user.id !== id) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+      
+      // Prevent changing role unless admin
+      if (req.body.role && user.role !== "admin") {
+        return res.status(403).json({ message: "Cannot change role" });
+      }
+      
+      // Prevent changing password through this endpoint
+      delete req.body.password;
+      
+      const updatedUser = await storage.updateUser(id, req.body);
+      
+      // Remove password from response
+      const { password, ...userWithoutPassword } = updatedUser;
+      
+      res.json(userWithoutPassword);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update user" });
+    }
+  });
+  
+  // Get cities for location filtering
+  app.get("/api/cities", async (req, res) => {
+    try {
+      // In a real app, this would be a database query
+      // For demo, just return some sample cities
+      const cities = ["New York", "Los Angeles", "Chicago", "Houston", "Phoenix", "Philadelphia", "San Antonio", "San Diego", "Dallas", "San Jose"];
+      
+      res.json(cities);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch cities" });
+    }
+  });
+  
   // Admin routes
   app.get("/api/admin/users", isAuthenticated, hasRole(["admin"]), async (req, res) => {
     try {
@@ -444,6 +572,66 @@ export async function registerRoutes(app) {
       res.json(safeUsers);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch users" });
+    }
+  });
+  
+  app.get("/api/admin/providers", isAuthenticated, hasRole(["admin"]), async (req, res) => {
+    try {
+      // Get provider profiles
+      const profiles = await storage.getProvidersBySearch({});
+      
+      // Enhance with user data
+      const enhancedProfiles = await Promise.all(profiles.map(async (profile) => {
+        const user = await storage.getUser(profile.userId);
+        
+        if (!user) return profile;
+        
+        // Remove password from user data
+        const { password, ...userWithoutPassword } = user;
+        
+        return {
+          ...profile,
+          user: userWithoutPassword
+        };
+      }));
+      
+      res.json(enhancedProfiles);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch providers" });
+    }
+  });
+  
+  app.get("/api/admin/bookings", isAuthenticated, hasRole(["admin"]), async (req, res) => {
+    try {
+      // In a real app, this would have pagination
+      // Get bookings with IDs 1-100 (for demo purposes)
+      const bookingPromises = Array.from({ length: 100 }, (_, i) => storage.getBookingWithDetails(i + 1));
+      const bookings = (await Promise.all(bookingPromises)).filter(Boolean);
+      
+      res.json(bookings);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch bookings" });
+    }
+  });
+  
+  app.patch("/api/admin/providers/:id/verify", isAuthenticated, hasRole(["admin"]), async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { isVerified } = req.body;
+      
+      if (isVerified === undefined) {
+        return res.status(400).json({ message: "isVerified field is required" });
+      }
+      
+      const updatedProfile = await storage.updateProviderProfile(id, { isVerified });
+      
+      if (!updatedProfile) {
+        return res.status(404).json({ message: "Provider profile not found" });
+      }
+      
+      res.json(updatedProfile);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update provider verification status" });
     }
   });
 
