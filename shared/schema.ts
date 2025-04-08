@@ -1,7 +1,9 @@
 import { pgTable, text, serial, integer, boolean, timestamp, real, json } from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+// Define all tables first
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
@@ -72,6 +74,68 @@ export const reviews = pgTable("reviews", {
   comment: text("comment"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
+
+// Define relations after all tables are defined
+export const usersRelations = relations(users, ({ one, many }) => ({
+  providerProfile: one(providerProfiles, {
+    fields: [users.id],
+    references: [providerProfiles.userId],
+  }),
+  customerBookings: many(bookings, { relationName: "customerBookings" }),
+  providerBookings: many(bookings, { relationName: "providerBookings" }),
+}));
+
+export const servicesRelations = relations(services, ({ many }) => ({
+  bookings: many(bookings),
+}));
+
+export const providerProfilesRelations = relations(providerProfiles, ({ one, many }) => ({
+  user: one(users, {
+    fields: [providerProfiles.userId],
+    references: [users.id],
+  }),
+  credentials: many(credentials),
+}));
+
+export const credentialsRelations = relations(credentials, ({ one }) => ({
+  providerProfile: one(providerProfiles, {
+    fields: [credentials.providerId],
+    references: [providerProfiles.id],
+  }),
+}));
+
+export const bookingsRelations = relations(bookings, ({ one, many }) => ({
+  customer: one(users, {
+    fields: [bookings.customerId],
+    references: [users.id],
+    relationName: "customerBookings",
+  }),
+  provider: one(users, {
+    fields: [bookings.providerId],
+    references: [users.id],
+    relationName: "providerBookings",
+  }),
+  service: one(services, {
+    fields: [bookings.serviceId],
+    references: [services.id],
+  }),
+  payment: one(payments),
+  review: one(reviews),
+}));
+
+export const paymentsRelations = relations(payments, ({ one }) => ({
+  booking: one(bookings, {
+    fields: [payments.bookingId],
+    references: [bookings.id],
+  }),
+}));
+
+export const reviewsRelations = relations(reviews, ({ one }) => ({
+  booking: one(bookings, {
+    fields: [reviews.bookingId],
+    references: [bookings.id],
+  }),
+}));
 
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({ id: true });
