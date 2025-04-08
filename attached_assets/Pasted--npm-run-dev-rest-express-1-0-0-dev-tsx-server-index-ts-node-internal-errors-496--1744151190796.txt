@@ -1,0 +1,109 @@
+$ npm run dev
+
+> rest-express@1.0.0 dev
+> tsx ./server/index.ts
+
+node:internal/errors:496
+    ErrorCaptureStackTrace(err);
+    ^
+
+Error [ERR_UNSUPPORTED_ESM_URL_SCHEME]: Only URLs with a scheme in: file, data, and node are supported by the default ESM loader. On Windows, absolute paths must be valid file:// URLs. Received protocol 'c:'
+    at __node_internal_captureLargerStackTrace (node:internal/errors:496:5)
+    at new NodeError (node:internal/errors:405:5)
+    at throwIfUnsupportedURLScheme (node:internal/modules/esm/load:131:11)
+    at defaultLoad (node:internal/modules/esm/load:82:3)
+    at nextLoad (node:internal/modules/esm/loader:163:28)
+    at load (file:///C:/Users/yassi/School/Concordia/Soen357/final-project/ServiceMatchPro/node_modules/tsx/dist/esm/index.mjs:2:1768)
+    at nextLoad (node:internal/modules/esm/loader:163:28)
+    at ESMLoader.load (node:internal/modules/esm/loader:603:26)
+    at ESMLoader.moduleProvider (node:internal/modules/esm/loader:457:22)
+    at new ModuleJob (node:internal/modules/esm/module_job:64:26)
+    at #createModuleJob (node:internal/modules/esm/loader:480:17)
+    at ESMLoader.getModuleJob (node:internal/modules/esm/loader:434:34)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async ModuleWrap.<anonymous> (node:internal/modules/esm/module_job:79:21) {
+  code: 'ERR_UNSUPPORTED_ESM_URL_SCHEME'
+}
+
+    at ESMLoader.moduleProvider (node:internal/modules/esm/loader:457:22)
+    at new ModuleJob (node:internal/modules/esm/module_job:64:26)
+    at #createModuleJob (node:internal/modules/esm/loader:480:17)
+    at ESMLoader.getModuleJob (node:internal/modules/esm/loader:434:34)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async ModuleWrap.<anonymous> (node:internal/modules/esm/module_job:79:21) {
+  code: 'ERR_UNSUPPORTED_ESM_URL_SCHEME'
+}
+
+    at new ModuleJob (node:internal/modules/esm/module_job:64:26)
+    at #createModuleJob (node:internal/modules/esm/loader:480:17)
+    at ESMLoader.getModuleJob (node:internal/modules/esm/loader:434:34)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async ModuleWrap.<anonymous> (node:internal/modules/esm/module_job:79:21) {
+  code: 'ERR_UNSUPPORTED_ESM_URL_SCHEME'
+}
+
+    at #createModuleJob (node:internal/modules/esm/loader:480:17)
+    at ESMLoader.getModuleJob (node:internal/modules/esm/loader:434:34)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async ModuleWrap.<anonymous> (node:internal/modules/esm/module_job:79:21) {
+  code: 'ERR_UNSUPPORTED_ESM_URL_SCHEME'
+}
+
+    at ESMLoader.getModuleJob (node:internal/modules/esm/loader:434:34)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async ModuleWrap.<anonymous> (node:internal/modules/esm/module_job:79:21) {
+  code: 'ERR_UNSUPPORTED_ESM_URL_SCHEME'
+}
+
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async ModuleWrap.<anonymous> (node:internal/modules/esm/module_job:79:21) {
+  code: 'ERR_UNSUPPORTED_ESM_URL_SCHEME'
+}
+
+    at async ModuleWrap.<anonymous> (node:internal/modules/esm/module_job:79:21) {
+  code: 'ERR_UNSUPPORTED_ESM_URL_SCHEME'
+}
+
+  code: 'ERR_UNSUPPORTED_ESM_URL_SCHEME'
+}
+
+}
+
+Node.js v18.17.1
+
+Node.js v18.17.1
+Node.js v18.17.1
+
+yassi@yibhir MINGW64 ~/School/Concordia/Soen357/final-project/ServiceMatchPro (main)
+$ node --version
+v18.17.1
+
+yassi@yibhir MINGW64 ~/School/Concordia/Soen357/final-project/ServiceMatchPro (main)
+$ npm run dev
+
+> rest-express@1.0.0 dev
+> tsx ./server/index.ts
+
+node:internal/errors:496
+    ErrorCaptureStackTrace(err);
+    ^
+
+Error [ERR_UNSUPPORTED_ESM_URL_SCHEME]: Only URLs with a scheme in: file, data, and node are supported by the default ESM loader. On Windows, absolute paths must be valid file:// URLs. Received protocol 'c:'
+    at __node_internal_captureLargerStackTrace (node:internal/errors:496:5)
+    at new NodeError (node:internal/errors:405:5)
+    at throwIfUnsupportedURLScheme (node:internal/modules/esm/load:131:11)
+    at defaultLoad (node:internal/modules/esm/load:82:3)
+    at nextLoad (node:internal/modules/esm/loader:163:28)
+    at load (file:///C:/Users/yassi/School/Concordia/Soen357/final-project/ServiceMatchPro/node_modules/tsx/dist/esm/index.mjs:2:1768)
+    at nextLoad (node:internal/modules/esm/loader:163:28)
+    at ESMLoader.load (node:internal/modules/esm/loader:603:26)
+    at ESMLoader.moduleProvider (node:internal/modules/esm/loader:457:22)
+    at new ModuleJob (node:internal/modules/esm/module_job:64:26)
+    at #createModuleJob (node:internal/modules/esm/loader:480:17)
+    at ESMLoader.getModuleJob (node:internal/modules/esm/loader:434:34)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async ModuleWrap.<anonymous> (node:internal/modules/esm/module_job:79:21) {
+  code: 'ERR_UNSUPPORTED_ESM_URL_SCHEME'
+}
+
+Node.js v18.17.1
