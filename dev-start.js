@@ -1,27 +1,27 @@
-// Simple script to start the development server
+// Simple script to start the server in development mode
+// Intended to be used as a drop-in replacement for `tsx server/index.ts`
+
 import { spawn } from 'child_process';
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+console.log('Starting server via node directly...');
 
-console.log('Starting development server...');
-
-// Start the server using babel-node to handle JSX
-const server = spawn('./node_modules/.bin/babel-node', [join(__dirname, 'server', 'dev.js')], {
+// Start the server with node
+const serverProcess = spawn('node', ['run.js'], {
   stdio: 'inherit',
-  shell: true
+  env: {
+    ...process.env,
+    NODE_ENV: 'development',
+    SESSION_SECRET: process.env.SESSION_SECRET || 'superSecretKeyForDevEnvironmentOnly'
+  }
 });
 
-server.on('error', (err) => {
+serverProcess.on('error', (err) => {
   console.error('Failed to start server:', err);
+  process.exit(1);
 });
 
 process.on('SIGINT', () => {
   console.log('Stopping server...');
-  server.kill('SIGINT');
+  serverProcess.kill('SIGINT');
   process.exit(0);
 });
-
-console.log('Server should start on port 5000');
