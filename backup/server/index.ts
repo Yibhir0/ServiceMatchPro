@@ -1,52 +1,24 @@
-const express = require('express');
-const cors = require('cors');
-const session = require('express-session');
-const MemoryStore = require('memorystore')(session);
-const dotenv = require('dotenv');
-const path = require('path');
-const fs = require('fs');
-const http = require('http');
-const { setupAuth } = require('./src/auth');
-const { setupRoutes } = require('./src/routes');
+import express from 'express';
+import cors from 'cors';
+import { createServer } from 'http';
+import path from 'path';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
 
-// Load environment variables
-dotenv.config();
+// Get directory paths for ESM
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Create Express app
 const app = express();
-const PORT = process.env.PORT || 3000;
+const port = Number(process.env.PORT) || 5000; // Use port 5000 for Replit workflow
 
-// Configure middleware
-app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:5173', 
-  credentials: true
-}));
+// Middleware
+app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Configure session
-const sessionSettings = {
-  secret: process.env.SESSION_SECRET || 'superSecretKeyForDevEnvironmentOnly',
-  resave: false,
-  saveUninitialized: false,
-  store: new MemoryStore({
-    checkPeriod: 86400000 // 24 hours
-  }),
-  cookie: { 
-    secure: process.env.NODE_ENV === 'production',
-    maxAge: 24 * 60 * 60 * 1000 // 24 hours
-  }
-};
-
-app.use(session(sessionSettings));
-
-// Set up authentication
-setupAuth(app);
-
-// Set up API routes
-setupRoutes(app);
-
-// Sample users for demo when auth is not working
+// Sample users for login
 const users = [
   { id: 1, username: 'sarahsmith', password: 'pass123', fullName: 'Sarah Smith', role: 'customer', email: 'sarah@example.com' },
   { id: 2, username: 'johnplumber', password: 'pass123', fullName: 'John Plumber', role: 'provider', email: 'john@example.com' },
@@ -63,8 +35,8 @@ app.get('/api', (req, res) => {
   res.json({ message: 'ServiceMatchPro API is running' });
 });
 
-// Simple Auth routes for demo (fallback when regular auth doesn't work)
-app.post('/api/simple-login', (req, res) => {
+// Auth routes
+app.post('/api/login', (req, res) => {
   const { username, password } = req.body;
   const user = users.find(u => u.username === username && u.password === password);
   
@@ -77,12 +49,42 @@ app.post('/api/simple-login', (req, res) => {
   }
 });
 
-// Setup static file serving
+app.post('/api/register', (req, res) => {
+  const { username, email } = req.body;
+  const existingUsername = users.find(u => u.username === username);
+  const existingEmail = users.find(u => u.email === email);
+  
+  if (existingUsername) {
+    res.status(400).json({ message: 'Username already exists' });
+  } else if (existingEmail) {
+    res.status(400).json({ message: 'Email already registered' });
+  } else {
+    const newUser = {
+      id: users.length + 1,
+      ...req.body,
+      role: req.body.role || 'customer'
+    };
+    users.push(newUser);
+    
+    // Don't send password to client
+    const { password, ...userWithoutPassword } = newUser;
+    res.status(201).json(userWithoutPassword);
+  }
+});
+
+app.get('/api/user', (req, res) => {
+  // For demo, just return the first user
+  const { password, ...userWithoutPassword } = users[0];
+  res.json(userWithoutPassword);
+});
+
+// Static file serving
+// Try to serve from client-standalone/dist
 const clientStandalonePath = path.join(__dirname, '..', 'client-standalone', 'dist');
 const clientPath = path.join(__dirname, '..', 'client', 'dist');
-const publicPath = path.join(__dirname, 'public');
+const publicPath = path.join(__dirname, '..', 'public');
 
-let staticPath;
+let staticPath: string;
 
 if (fs.existsSync(clientStandalonePath)) {
   staticPath = clientStandalonePath;
@@ -202,26 +204,15 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(staticPath, 'index.html'));
 });
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  const status = err.status || 500;
-  res.status(status).json({
-    message: err.message || 'Internal Server Error'
-  });
-});
-
-// Create server
-const server = http.createServer(app);
-
-// Start server
-server.listen(PORT, '0.0.0.0', () => {
+// Create and start server
+const server = createServer(app);
+server.listen(port, () => {
   console.log(`
 =========================================
  Service Match Pro
 =========================================
- Server running at: http://localhost:${PORT}
- API endpoint: http://localhost:${PORT}/api/test
+ Server running at: http://localhost:${port}
+ API endpoint: http://localhost:${port}/api/test
 =========================================
   `);
 });
