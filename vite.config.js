@@ -23,18 +23,5 @@ export default defineConfig({
     host: "0.0.0.0",
     strictPort: true,
     port: 3000,
-  },
-  // Very important: tell esbuild to treat .js files as JSX
-  esbuild: {
-    loader: {
-      '.js': 'jsx',
-    },
-  },
-  optimizeDeps: {
-    esbuildOptions: {
-      loader: {
-        '.js': 'jsx',
-      },
-    },
-  },
+  }
 });
